@@ -17,38 +17,38 @@ class CMakeGenerator
 public:
     explicit CMakeGenerator(std::unique_ptr<IConfigParser> p) : m_parser(std::move(p)) {}
 
+    /**
+     * Generates a CMakeLists.txt file based on the provided config filename.
+     *
+     * @param configFilename The path to the configuration file.
+     *
+     * @throws std::runtime_error If the CMakeLists.txt file fails to open for writing.
+     */
     void generate(const std::string& configFilename)
     {
-        try
-        {
-            auto sections = m_parser->parse(configFilename);
-            std::filesystem::path filePath(configFilename);
-            std::string parentDirectoryName = filePath.parent_path().filename().string();
+        auto sections = m_parser->parse(configFilename);
+        std::filesystem::path filePath(configFilename);
+        std::string parentDirectoryName = filePath.parent_path().filename().string();
 
-            std::ofstream cmakeFile(filePath.replace_filename("CMakeLists.txt"));
-            if (!cmakeFile.is_open())
-            {
-                throw std::runtime_error("Failed to open CMakeLists.txt for writing!");
-            }
-
-            writeCMakeHeader(cmakeFile, parentDirectoryName);
-            processSections(cmakeFile, sections);
-            cmakeFile.close();
-            std::cout << "CMakeLists.txt has been generated successfully!" << std::endl;
-        }
-        catch (const std::exception& e)
+        std::ofstream cmakeFile(filePath.replace_filename("CMakeLists.txt"));
+        if (!cmakeFile.is_open())
         {
-            std::cerr << "Error occurred: " << e.what() << std::endl;
+            throw std::runtime_error("Failed to open CMakeLists.txt for writing!");
         }
+
+        writeCMakeHeader(cmakeFile, parentDirectoryName);
+        processSections(cmakeFile, sections);
+
+        cmakeFile.close();
+
+        std::cout << "CMakeLists.txt has been generated successfully!" << std::endl;
     }
 
 private:
     void writeCMakeHeader(std::ofstream& file, const std::string& projectName)
     {
-        file << "cmake_minimum_required(VERSION " << CMAKE_MIN_VERSION << ")\n";
-        file << "project(" << projectName << ")\n\n";
-
-        if (file.fail())
+        if (!(file << "cmake_minimum_required(VERSION " << CMAKE_MIN_VERSION << ")\n"
+            << "project(" << projectName << ")\n\n"))
         {
             throw std::runtime_error("Failed to write CMake header to the file!");
         }
@@ -199,11 +199,12 @@ int main(int argc, char* argv[])
     {
         ArgParser parser(argc, argv);
 
-        if (parser.hasOption("-h"))
+        if (parser.hasOption("-h") || !parser.hasOption("-f"))
         {
             printUsage(argv[0]);
             return 0;
         }
+
         std::string filename = parser.getOptionValue("-f");
         if (!filename.empty())
         {
@@ -217,6 +218,11 @@ int main(int argc, char* argv[])
                     generator.generate(entry.path().string());
                 }
             }
+        }
+        else
+        {
+            printUsage(argv[0]);
+            return 0;
         }
     }
     catch (const std::exception& e)

@@ -2,7 +2,6 @@
 
 #include "IConfigParser.h"
 
-// Конкретная реализация парсера конфигурации
 class CustomConfigParser : public IConfigParser
 {
 public:
