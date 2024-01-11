@@ -1,21 +1,16 @@
 #include "CustomConfigParser.h"
 
 #include <iostream>
-#include <fstream>
+#include <sstream>
 
-std::vector<ConfigSection> CustomConfigParser::parse(const std::string& filename) const
+std::vector<ConfigSection> CustomConfigParser::parse(const std::string& content) const
 {
     std::vector<ConfigSection> configSections;
-    std::ifstream file(filename);
+    std::istringstream iss(content);
     std::string currentSection;
-    if (!file.is_open())
-    {
-        std::cerr << "Unable to open file: " << filename << std::endl;
-        return configSections;
-    }
     std::string line;
     bool inMultilineComment = false;
-    while (std::getline(file, line))
+    while (std::getline(iss, line))
     {
         if (inMultilineComment)
         {
@@ -59,6 +54,5 @@ std::vector<ConfigSection> CustomConfigParser::parse(const std::string& filename
             configSections.back().lines.push_back(std::move(line));
         }
     }
-    file.close();
     return configSections;
 }

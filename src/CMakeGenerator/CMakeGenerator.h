@@ -22,20 +22,22 @@ public:
      *
      * @throws std::runtime_error If the CMakeLists.txt file fails to open for writing.
      */
-    void generate(const std::string& configFilename);
+    std::string generate(const std::string& content, const std::string& projectName);
+
+    std::string getOutputFilename() const;
 
 private:
-    void writeCMakeHeader(std::ofstream& file, const std::string& projectName);
+    void writeCMakeHeader(std::ostream& file, const std::string& projectName);
 
-    void processSections(std::ofstream& file, const std::vector<ConfigSection>& sections);
-    void processDirectoriesSection(std::ofstream& file, const ConfigSection& section);
-    void processExcludesSection(std::ofstream& file, const ConfigSection& section);
-    void processIncludesSection(std::ofstream& file, const ConfigSection& section);
-    void processDependenciesSection(std::ofstream& file, const ConfigSection& section);
-    void processDefinesSection(std::ofstream& file, const ConfigSection& section);
-    void processAppSection(std::ofstream& file);
-    void processStaticSection(std::ofstream& file);
-    void processDllSection(std::ofstream& file);
+    void processSections(std::ostream& file, const std::vector<ConfigSection>& sections);
+    void processDirectoriesSection(std::ostream& file, const ConfigSection& section);
+    void processExcludesSection(std::ostream& file, const ConfigSection& section);
+    void processIncludesSection(std::ostream& file, const ConfigSection& section);
+    void processDependenciesSection(std::ostream& file, const ConfigSection& section);
+    void processDefinesSection(std::ostream& file, const ConfigSection& section);
+    void processAppSection(std::ostream& file);
+    void processStaticSection(std::ostream& file);
+    void processDllSection(std::ostream& file);
 
 private:
     std::unique_ptr<IConfigParser> m_parser;

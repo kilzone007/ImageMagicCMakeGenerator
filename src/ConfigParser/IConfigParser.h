@@ -12,7 +12,7 @@ struct ConfigSection
 class IConfigParser
 {
 public:
-    virtual std::vector<ConfigSection> parse(const std::string& filename) const = 0;
+    virtual std::vector<ConfigSection> parse(const std::string& content) const = 0;
 
     virtual ~IConfigParser() = default;
 };

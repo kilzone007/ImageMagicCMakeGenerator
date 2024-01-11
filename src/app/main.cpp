@@ -2,6 +2,9 @@
 #include <CustomConfigParser.h>
 #include <CMakeGenerator.h>
 
+#include <FileReader.h>
+#include <FileSaver.h>
+
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -37,7 +40,16 @@ int main(int argc, char* argv[])
                 if (entry.is_regular_file() && entry.path().filename() == "Config.txt")
                 {
                     std::cout << "Parsing file: " << entry.path() << std::endl;
-                    generator.generate(entry.path().string());
+
+                    auto path = entry.path();
+
+                    FileReader reader(entry.path());
+                    const auto content = generator.generate(reader.readFile(), path.parent_path().filename().string());
+
+                    FileSaver saver(path.replace_filename(generator.getOutputFilename()).string());\
+                    saver.saveToFile(content);
+
+                    std::cout << "CMakeLists.txt has been generated successfully!" << std::endl;
                 }
             }
         }

@@ -1,7 +1,7 @@
 #include "CMakeGenerator.h"
 
 #include <iostream>
-#include <fstream>
+#include <sstream>
 #include <filesystem>
 #include <stdexcept>
 
@@ -13,27 +13,25 @@ CMakeGenerator::CMakeGenerator(std::unique_ptr<IConfigParser> p)
 {
 }
 
-void CMakeGenerator::generate(const std::string& configFilename)
+std::string CMakeGenerator::generate(const std::string& content, const std::string& projectName)
 {
-    auto sections = m_parser->parse(configFilename);
-    std::filesystem::path filePath(configFilename);
-    std::string parentDirectoryName = filePath.parent_path().filename().string();
+    auto sections = m_parser->parse(content);
+    
+    std::ostringstream cmakeFile;
 
-    std::ofstream cmakeFile(filePath.replace_filename("CMakeLists.txt"));
-    if (!cmakeFile.is_open())
-    {
-        throw std::runtime_error("Failed to open CMakeLists.txt for writing!");
-    }
-
-    writeCMakeHeader(cmakeFile, parentDirectoryName);
+    writeCMakeHeader(cmakeFile, projectName);
     processSections(cmakeFile, sections);
 
-    cmakeFile.close();
 
-    std::cout << "CMakeLists.txt has been generated successfully!" << std::endl;
+    return cmakeFile.str();
 }
 
-void CMakeGenerator::writeCMakeHeader(std::ofstream& file, const std::string& projectName)
+std::string CMakeGenerator::getOutputFilename() const
+{
+    return "CMakeLists.txt";
+}
+
+void CMakeGenerator::writeCMakeHeader(std::ostream& file, const std::string& projectName)
 {
     if (!(file << "cmake_minimum_required(VERSION " << CMAKE_MIN_VERSION << ")\n"
         << "project(" << projectName << ")\n\n"))
@@ -42,7 +40,7 @@ void CMakeGenerator::writeCMakeHeader(std::ofstream& file, const std::string& pr
     }
 }
 
-void CMakeGenerator::processSections(std::ofstream& file, const std::vector<ConfigSection>& sections)
+void CMakeGenerator::processSections(std::ostream& file, const std::vector<ConfigSection>& sections)
 {
     for (const auto& section : sections)
     {
@@ -95,7 +93,7 @@ void CMakeGenerator::processSections(std::ofstream& file, const std::vector<Conf
     }
 }
 
-void CMakeGenerator::processDirectoriesSection(std::ofstream& file, const ConfigSection& section)
+void CMakeGenerator::processDirectoriesSection(std::ostream& file, const ConfigSection& section)
 {
     file << "set(" << PROJECT_NAME_VARIABLE << "_SOURCES)\n\n";
     for (const auto& line : section.lines)
@@ -112,7 +110,7 @@ void CMakeGenerator::processDirectoriesSection(std::ofstream& file, const Config
     file << "unset(_tmp_files)\n\n";
 }
 
-void CMakeGenerator::processExcludesSection(std::ofstream& file, const ConfigSection& section)
+void CMakeGenerator::processExcludesSection(std::ostream& file, const ConfigSection& section)
 {
     for (const auto& line : section.lines)
     {
@@ -121,7 +119,7 @@ void CMakeGenerator::processExcludesSection(std::ofstream& file, const ConfigSec
     file << "\n";
 }
 
-void CMakeGenerator::processIncludesSection(std::ofstream& file, const ConfigSection& section)
+void CMakeGenerator::processIncludesSection(std::ostream& file, const ConfigSection& section)
 {
     for (const auto& line : section.lines)
     {
@@ -130,7 +128,7 @@ void CMakeGenerator::processIncludesSection(std::ofstream& file, const ConfigSec
     file << "\n";
 }
 
-void CMakeGenerator::processDependenciesSection(std::ofstream& file, const ConfigSection& section)
+void CMakeGenerator::processDependenciesSection(std::ostream& file, const ConfigSection& section)
 {
     for (const auto& line : section.lines)
     {
@@ -139,7 +137,7 @@ void CMakeGenerator::processDependenciesSection(std::ofstream& file, const Confi
     file << "\n";
 }
 
-void CMakeGenerator::processDefinesSection(std::ofstream& file, const ConfigSection& section)
+void CMakeGenerator::processDefinesSection(std::ostream& file, const ConfigSection& section)
 {
     for (const auto& line : section.lines)
     {
@@ -148,21 +146,21 @@ void CMakeGenerator::processDefinesSection(std::ofstream& file, const ConfigSect
     file << "\n";
 }
 
-void CMakeGenerator::processAppSection(std::ofstream& file)
+void CMakeGenerator::processAppSection(std::ostream& file)
 {
     file << "add_executable(" << PROJECT_NAME_VARIABLE << " ";
     file << "${" << PROJECT_NAME_VARIABLE << "_SOURCES}";
     file << ")\n\n";
 }
 
-void CMakeGenerator::processStaticSection(std::ofstream& file)
+void CMakeGenerator::processStaticSection(std::ostream& file)
 {
     file << "add_library(" << PROJECT_NAME_VARIABLE << " STATIC ";
     file << "${" << PROJECT_NAME_VARIABLE << "_SOURCES}";
     file << ")\n\n";
 }
 
-void CMakeGenerator::processDllSection(std::ofstream& file)
+void CMakeGenerator::processDllSection(std::ostream& file)
 {
     file << "add_library(" << PROJECT_NAME_VARIABLE << " SHARED ";
     file << "${" << PROJECT_NAME_VARIABLE << "_SOURCES}";

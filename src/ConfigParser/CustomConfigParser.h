@@ -5,5 +5,5 @@
 class CustomConfigParser : public IConfigParser
 {
 public:
-    std::vector<ConfigSection> parse(const std::string& filename) const override;
+    std::vector<ConfigSection> parse(const std::string& content) const override;
 };
